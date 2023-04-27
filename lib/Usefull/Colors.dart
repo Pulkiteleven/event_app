@@ -1,19 +1,32 @@
 
 
 import 'dart:io';
+import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
-import '../screens/sign_in.dart';
+import '../Auth/sign_in.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:random_avatar/random_avatar.dart';
+import 'package:lottie/lottie.dart' as lottie;
+
+
 
 
 
 Color mainColor = Color(0xFF4C7EFF);
 Color secColor = Color(0xFF6991FF);
 Color bgColor = Color(0xFF112454);
-Color bgLight = Color(0xFF383838);
+Color bgLight = Color(0xFF1C3269);
+
+// Color mainColor = Color(0xFF0e8388);
+// Color secColor = Color(0xFFcbe4de);
+// Color bgColor = Color(0xFF2c3333);
+// Color bgLight = Color(0xff2e4f4f);
 
 Color textColor = Color(0xFFFFFFFF);
 Color textDark = Color(0xFF000D31);
@@ -24,17 +37,28 @@ Color lightGrey = Color(0xFFECECED);
 
 Color errorColor = Color(0xFFFF0062);
 
+Color greenColor = Color(0xFF00FF73);
+
 Color transparent_overlay = Color(0xFFFFFF);
+
+
+Color redColor = Color(0xFFFF0062);
+
 
 String mainFont = 'mons';
 String mainFontLight = 'mons';
 
-List allBanners = ['Assets/b/b1.jpg',
+List allBanners = [
+  'Assets/b/b1.jpg',
   'Assets/b/b2.jpg',
   'Assets/b/b3.jpg',
   'Assets/b/b4.jpg',
   'Assets/b/b5.jpg',
-  'Assets/b/b6.jpg',];
+  'Assets/b/b6.jpg',
+  'Assets/b/b7.jpg',
+  'Assets/b/b8.jpg',
+  'Assets/b/b9.jpg',
+];
 
 
 AutoSizeText mainText(String text, Color c, double size, FontWeight w,int lines) {
@@ -53,6 +77,21 @@ AutoSizeText mainText(String text, Color c, double size, FontWeight w,int lines)
   );
 }
 
+Text onlymainText(String text, Color c, double size, FontWeight w,int lines) {
+  return Text(
+    text,
+    textAlign: TextAlign.center,
+    maxLines: lines,
+    style: TextStyle(
+      color: c,
+      letterSpacing: 0.5,
+      fontSize: size,
+      fontFamily: mainFont,
+      fontWeight: w,
+
+    ),
+  );
+}
 
 
 AutoSizeText mainTextFAQS(String text, Color c, double size, FontWeight w,int lines) {
@@ -174,7 +213,7 @@ void Snacker(String title,GlobalKey<ScaffoldMessengerState> aa){
 
 }
 
-Widget notFound(bool a,BuildContext context){
+Widget notFound(bool a,String msg,BuildContext context){
   return Visibility(
     visible: a,
       child: Center(
@@ -184,8 +223,9 @@ Widget notFound(bool a,BuildContext context){
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset('Assets/notfound.png',width: 200.0,),
-          mainText("Nothing Found", Colors.white, 10.0, FontWeight.normal, 1),
+          Image.asset('Assets/nf.png',width: 180.0,),
+          SizedBox(height: 5.0,),
+          mainText(msg, Colors.white, 10.0, FontWeight.normal, 1),
         ],
     ),
   ),
@@ -211,24 +251,27 @@ toaster(String msg){
       backgroundColor: mainColor);
 }
 
-Widget banners(int index, String img, String file,double widht){
+Widget banners(int index, String img, String file,double widht,double radius,BuildContext ctx) {
   if(file != ""){
     return Container(
       width: widht,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(15.0),
+        borderRadius: BorderRadius.circular(radius),
         child: Image.file(File(file),
         fit: BoxFit.cover,),
       ),
     );
   }
-  else if(img != ""){
+  else if(img != "") {
     return Container(
       width: widht,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(15.0),
-        child: Image.network(img,
-        fit: BoxFit.cover,),
+        borderRadius: BorderRadius.circular(radius),
+        child: CachedNetworkImage(imageUrl:img,
+        fit: BoxFit.cover,
+        placeholder: (ctx,url) {
+          return CircularProgressIndicator(color: mainColor,);
+        },),
       ),
     );
   }
@@ -236,7 +279,7 @@ Widget banners(int index, String img, String file,double widht){
     return Container(
       width: widht,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(15.0),
+        borderRadius: BorderRadius.circular(radius),
         child: Image.asset(allBanners[index],
         fit: BoxFit.cover,),
       ),
@@ -260,13 +303,113 @@ List allAvatars = [
 "Assets/avatars/14.jpg",
 ];
 
-Widget Avatar(int index, double radius){
+Widget Avatar(String index, double radius){
+
+  Widget svgCode = randomAvatar(index,fit: BoxFit.cover,);
   return CircleAvatar(
     radius: radius,
     child: ClipOval(
-      child: Image.asset(allAvatars[index],fit: BoxFit.cover,),
+      child: svgCode,
+      // child: Image.asset(allAvatars[index],fit: BoxFit.cover,),
     ),
   );
 }
+
+Widget circles(BuildContext context){
+  return Stack(
+    clipBehavior: Clip.hardEdge, children: [
+    Container(
+      // margin: EdgeInsets.only(),
+
+      child:
+      Transform.translate(
+        offset: Offset(
+          -70.0,
+          -120.0,
+        ),
+        child: CircleAvatar(
+          backgroundColor: bgLight,
+          radius: 80.0,
+        ),
+      ),
+    ),
+    Container(
+      // margin: EdgeInsets.only(),
+
+      child:
+      Transform.translate(
+        offset: Offset(
+          MediaQuery.of(context).size.width - 100.0,
+          MediaQuery.of(context).size.height - 200.0,
+        ),
+        child: CircleAvatar(
+          backgroundColor: bgLight,
+          radius: 80.0,
+        ),
+      ),
+    ),
+
+  ],
+  );
+}
+
+Widget coolcircles(BuildContext context){
+  return Stack(
+    clipBehavior: Clip.hardEdge, children: [
+    Container(
+      // margin: EdgeInsets.only(),
+      alignment: Alignment.center,
+      child:
+      Transform.translate(
+        offset: Offset(
+          0.0,
+          0.0,
+        ),
+        child: CircleAvatar(
+          backgroundColor: Color(0xFF3D75FF),
+          radius: 150.0,
+        ),
+      ),
+    ),
+
+
+    Container(
+      // margin: EdgeInsets.only(),
+      alignment: Alignment.center,
+      child:
+      Transform.translate(
+        offset: Offset(
+          0.0,
+          0.0,
+        ),
+        child: CircleAvatar(
+          backgroundColor: Color(0xFF2462FA),
+          radius: 100.0,
+        ),
+      ),
+    ),
+  ],
+  );
+}
+
+Widget sorry(String msg,Widget w){
+  return Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      // Image.asset(allAvatars[3]),
+      lottie.Lottie.asset('Assets/sorry.json',
+        frameRate: lottie.FrameRate.max,
+        width: 200.0,
+        repeat: true,
+        alignment: Alignment.center,
+      ),
+      mainText(msg, mainColor, 10.0, FontWeight.normal,1),
+      w
+    ],
+  );
+}
+
+
 
 

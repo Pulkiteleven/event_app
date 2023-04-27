@@ -1,4 +1,4 @@
-import 'package:event_app/screens/sign_in.dart';
+import 'package:event_app/Auth/sign_in.dart';
 import 'package:flutter/material.dart';
 
 import '../main.dart';
@@ -195,6 +195,38 @@ class listbtnsss extends StatelessWidget {
     );
   }
 }
+
+class smallbtnsss extends StatelessWidget {
+  VoidCallback callback;
+  String title;
+  Color main;
+  Color text;
+
+  smallbtnsss(this.title, this.callback, this.main, this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 15.0,
+      child: ElevatedButton(
+        // child: Padding(
+        //   padding: const EdgeInsets.fromLTRB(3, 0, 3, 0),
+        child: onlymainText(title, text, 7.0, FontWeight.normal, 1),
+        // ),
+        style: ButtonStyle(
+            foregroundColor: MaterialStateProperty.all<Color>(main),
+            backgroundColor: MaterialStateProperty.all<Color>(main),
+            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(borderRadius),
+                    side: BorderSide(color: main)))),
+        onPressed: callback,
+      ),
+    );
+  }
+}
+
+
 
 
 

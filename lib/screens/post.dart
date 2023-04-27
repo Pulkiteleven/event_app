@@ -28,6 +28,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:http/http.dart' as http;
 
 import '../Usefull/Functions.dart';
+import 'package:draggable_home/draggable_home.dart';
+
 
 
 
@@ -80,6 +82,7 @@ class _PostScreenState extends State<PostScreen> {
 
 
   bool online = false;
+  String link = "";
   bool isType = false;
   List typebg = [bgColor,bgColor];
   List typetext = [mainColor,mainColor];
@@ -119,9 +122,14 @@ class _PostScreenState extends State<PostScreen> {
   List<Widget> allBanners = [];
   bool isbannerFile = false;
 
+  bool canpost = false;
 
   final _messangerKey = GlobalKey<ScaffoldMessengerState>();
 
+   bool approval = false;
+   bool isApproved = false;
+   List approvebg = [bgColor,bgColor];
+   List approvetext = [mainColor,mainColor];
 
 
   @override
@@ -129,6 +137,7 @@ class _PostScreenState extends State<PostScreen> {
     super.initState();
     getCategory();
     putBanners();
+    getPosters();
   }
 
 
@@ -163,9 +172,44 @@ class _PostScreenState extends State<PostScreen> {
 
           setState(() {
             categoryList.add(a);
+            // isHide = false;
+          });
+        }
+      }
+    }
+  }
+
+  getPosters() async {
+    setState(() {
+      isHide = true;
+    });
+    User? user = await FirebaseAuth.instance.currentUser;
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    QuerySnapshot querySnapshot = await firestore
+        .collection('posters')
+        .get();
+
+    if (querySnapshot != null) {
+      final allData = querySnapshot.docs.map((e) => e.data()).toList();
+      if (allData.length != 0) {
+        var b = allData[0] as Map<String, dynamic>;
+        print(b);
+        List posters = b['posters'];
+        String? email = user!.email;
+        if(posters.contains(email)){
+          setState(() {
+            canpost = true;
+            isHide= false;
+          });
+        }
+        else{
+          setState(() {
+            canpost = false;
             isHide = false;
           });
         }
+        
       }
     }
   }
@@ -199,7 +243,7 @@ class _PostScreenState extends State<PostScreen> {
 
 
   putBanners(){
-    for(int i = 0;i<=5;i++){
+    for(int i = 0;i<=8;i++){
       var a = GestureDetector(
         onTap: (){
           setState(() {
@@ -207,7 +251,7 @@ class _PostScreenState extends State<PostScreen> {
             bannerFile = File("");
           });
         },
-        child: banners(i, "", "", 100.0),
+        child: banners(i, "", "", 100.0,15.0,context),
       );
       var s = SizedBox(width: 5.0,);
       
@@ -253,296 +297,381 @@ class _PostScreenState extends State<PostScreen> {
   Widget build(BuildContext context) {
 
     mCtx = context;
+    return DraggableHome(
+      title: mainText("", textColor, 10.0, FontWeight.normal, 1),
+      alwaysShowLeadingAndAction: true,
+      backgroundColor: bgLight,
 
-    return Stack(
-      children: [
-        SingleChildScrollView(
-          child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Form(
-                key: formKey,
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: MediaQuery.of(context).size.width,
-                        child: Stack(
-                          children: [
-                            banners(currentIndex, bannerImg, bannerFile.path, MediaQuery.of(context).size.width),
-                            Container(
-                              alignment: Alignment.topRight,
-                              child: IconButton(
-                                  onPressed: (){
-                                    customBanner();
-                                  },
-                                  icon: Icon(Iconsax.edit,color: Colors.white,)),
+      actions: [
+        IconButton(
+            onPressed: (){
+              customBanner();
+            },
+            icon: Icon(Iconsax.edit,color: Colors.white,)),
+      ],
+      leading: IconButton(
+        icon: Icon(Iconsax.arrow_left,color: textColor,),
+        onPressed: (){
+          Navigator.pop(context);
+        },
+      ),
+      headerExpandedHeight: 0.25,
+      stretchMaxHeight: 0.27,
+      appBarColor: bgLight,
+      headerWidget:banners(currentIndex, bannerImg, bannerFile.path, MediaQuery.of(context).size.width,15.0,context),
+
+      body: [Visibility(
+        visible: canpost && !isHide,
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: allBanners,
                             ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 10.0,),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: allBanners,
-                        ),
-                      ),
+                          ),
 
-                      TextFormField(
-                        maxLength: 50,
-                        style: TextStyle(
-                            color: textColor,
-                            fontSize: 25.0,
-                            fontFamily: 'mons'),
-                        decoration: InputDecoration(
-                          counterText: "",
-                          hintText: "Post Event",
-                          hintStyle: TextStyle(
-                            fontFamily: 'mons',
-                            fontSize: 25.0,
-                            color: lightGrey,
-                          ),
-                          errorStyle: TextStyle(
-                            color: errorColor,
-                            fontFamily: 'mons',
-                            fontSize: 10.0,
-                          ),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: textColor,width: 0),
+                          TextFormField(
+                            maxLength: 50,
+                            style: TextStyle(
+                                color: textColor,
+                                fontSize: 25.0,
+                                fontFamily: 'mons'),
+                            decoration: InputDecoration(
+                              counterText: "",
+                              hintText: "Post Event",
+                              hintStyle: TextStyle(
+                                fontFamily: 'mons',
+                                fontSize: 25.0,
+                                color: lightGrey,
+                              ),
+                              errorStyle: TextStyle(
+                                color: errorColor,
+                                fontFamily: 'mons',
+                                fontSize: 10.0,
+                              ),
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: textColor,width: 0),
 
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: textColor,width: 0),
+                              ),
+                              focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: textColor,width: 0),
 
-                          ),
-                          errorBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: errorColor,width: 0),
+                              ),
+                              errorBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: errorColor,width: 0),
 
-                          ),
-                        ),
-                        onChanged: (text){
-                          setState(() {
-                            title = text;
-                          });
-                          },
-                        validator: (text){
-                          if(text!.isEmpty){
-                            return("Please Enter a Title");
-                          }
-                        },
-
-                      ),
-                      SizedBox(height: 10.0,),
-                      TextFormField(
-                        minLines: 1,
-                        maxLines: 5,
-                        maxLength: 200,
-                        style: TextStyle(
-                            color: lightGrey,
-                            fontSize: 15.0,
-                            fontFamily: 'mons'),
-                        decoration: InputDecoration(
-                          counterText: "",
-                          hintText: "Tell us more about the Event",
-                          hintStyle: TextStyle(
-                            fontFamily: 'mons',
-                            fontSize: 15.0,
-                            color: lightGrey,
-                          ),
-                          errorStyle: TextStyle(
-                            color: errorColor,
-                            fontFamily: 'mons',
-                            fontSize: 10.0,
-                          ),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: textColor,width: 0),
+                              ),
+                            ),
+                            onChanged: (text){
+                              setState(() {
+                                title = text;
+                              });
+                            },
+                            validator: (text){
+                              if(text!.isEmpty){
+                                return("Please Enter a Title");
+                              }
+                            },
 
                           ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: textColor,width: 0),
+                          SizedBox(height: 10.0,),
+                          TextFormField(
+                            minLines: 1,
+                            maxLines: 5,
+                            maxLength: 200,
+                            style: TextStyle(
+                                color: lightGrey,
+                                fontSize: 15.0,
+                                fontFamily: 'mons'),
+                            decoration: InputDecoration(
+                              counterText: "",
+                              hintText: "Tell us more about the Event",
+                              hintStyle: TextStyle(
+                                fontFamily: 'mons',
+                                fontSize: 15.0,
+                                color: lightGrey,
+                              ),
+                              errorStyle: TextStyle(
+                                color: errorColor,
+                                fontFamily: 'mons',
+                                fontSize: 10.0,
+                              ),
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: textColor,width: 0),
 
+                              ),
+                              focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: textColor,width: 0),
+
+                              ),
+                              errorBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: errorColor,width: 0),
+
+                              ),
+                            ),
+                            onChanged: (text){
+                              setState(() {
+                                desc = text;
+                              });
+                            },
+                            validator: (text){
+                              if(text!.isEmpty){
+                                return("Please Enter a Desc");
+                              }
+                            },
                           ),
-                          errorBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: errorColor,width: 0),
 
-                          ),
-                        ),
-                        onChanged: (text){
-                          setState(() {
-                            desc = text;
-                          });
-                          },
-                        validator: (text){
-                          if(text!.isEmpty){
-                            return("Please Enter a Desc");
-                          }
-                        },
-                      ),
+                          SizedBox(height: 15.0,),
 
-                      SizedBox(height: 15.0,),
-
-                      mainText("The event is?", lightGrey, 10.0, FontWeight.normal, 1),
-                      Row(
-                        children: [
-                          Expanded(child: selectbtnsss("Single Day Event", () { changeMulti(0);}, multibg[0], multitext[0])),
-                          SizedBox(width: 5.0,),
-                          Expanded(child: selectbtnsss("Multi Day Event", () { changeMulti(1);}, multibg[1], multitext[1])),
-                        ],
-                      ),
-                      SizedBox(height: 10.0,),
-
-
-                     Visibility(
-                       visible: isDay && !multiday,
-                          child: selectbtnsss(dateString,(){pickDate();},bgColor,mainColor)),
-                      Visibility(
-                          visible: isDay && multiday,
-                          child: Row(
+                          mainText("The event is?", lightGrey, 10.0, FontWeight.normal, 1),
+                          Row(
                             children: [
-                              Expanded(child: selectbtnsss(startDatestring,(){pickstartDate();},bgColor,mainColor)),
+                              Expanded(child: selectbtnsss("Single Day Event", () { changeMulti(0);}, multibg[0], multitext[0])),
                               SizedBox(width: 5.0,),
-                              Expanded(child: selectbtnsss(endDateString,(){pickendDate();},bgColor,mainColor)),
+                              Expanded(child: selectbtnsss("Multi Day Event", () { changeMulti(1);}, multibg[1], multitext[1])),
                             ],
-                          )),
-                      SizedBox(height: 10.0,),
-
-                      mainText("event time", lightGrey, 10.0, FontWeight.normal, 1),
-                      Row(
-                        children: [
-                          Expanded(child: selectbtnsss(startTimeString, () { startTimePicker();}, bgColor, mainColor)),
-                          SizedBox(width: 5.0,),
-                          Expanded(child: selectbtnsss(endTimeString, () { endTimePicker();}, bgColor, mainColor)),
-                        ],
-                      ),
-
-                      SizedBox(height: 10.0,),
-                      mainText("Online or Offline?", lightGrey, 10.0, FontWeight.normal, 1),
-                      Row(
-                        children: [
-                          Expanded(child: selectbtnsss("Online", () {changeType(0);}, typebg[0], typetext[0])),
-                          SizedBox(width: 5.0,),
-                          Expanded(child: selectbtnsss("Offline", () {changeType(1);}, typebg[1], typetext[1])),
-                        ],
-                      ),
-
-                      SizedBox(height: 10.0,),
-                      Visibility(
-                           visible: isType && !online,
-                           child: Column(
-                             crossAxisAlignment: CrossAxisAlignment.start,
-                             children: [
-                               mainText("Where?", lightGrey, 10.0, FontWeight.normal, 1),
-                               selectbtnsss(place, () { ShowStateCityPicker(context);}, bgColor, mainColor),
-                               SizedBox(height: 5.0,),
-                               TextFormField(
-                                 minLines: 1,
-                                 maxLines: 2,
-                                 maxLength: 200,
-                                 style: TextStyle(
-                                     color: lightGrey,
-                                     fontSize: 13.0,
-                                     fontFamily: 'mons'),
-                                 decoration: InputDecoration(
-                                   counterText: "",
-                                   hintText: "Where event is talking place?",
-                                   hintStyle: TextStyle(
-                                     fontFamily: 'mons',
-                                     fontSize: 13.0,
-                                     color: lightGrey,
-                                   ),
-                                   errorStyle: TextStyle(
-                                     color: errorColor,
-                                     fontFamily: 'mons',
-                                     fontSize: 10.0,
-                                   ),
-                                   enabledBorder: UnderlineInputBorder(
-                                     borderSide: BorderSide(color: textColor,width: 0),
-
-                                   ),
-                                   focusedBorder: UnderlineInputBorder(
-                                     borderSide: BorderSide(color: textColor,width: 0),
-
-                                   ),
-                                   errorBorder: UnderlineInputBorder(
-                                     borderSide: BorderSide(color: errorColor,width: 0),
-
-                                   ),
-                                 ),
-                                 onChanged: (text){
-                                   setState(() {
-                                     venu = text;
-                                   });
-                                 },
-                                 validator: (text){
-                                   if(text!.isEmpty){
-                                     return("Please Enter a Venu");
-                                   }
-                                 },
-                               ),
-
-                             ],
-                           )),
-
-                      SizedBox(height: 10.0,),
-                      TextFormField(
-                        maxLength: 3,
-                        keyboardType: TextInputType.number,
-                        style: TextStyle(
-                            color: lightGrey,
-                            fontSize: 15.0,
-                            fontFamily: 'mons'),
-                        decoration: InputDecoration(
-                          counterText: "",
-                          hintText: "Capacity",
-                          hintStyle: TextStyle(
-                            fontFamily: 'mons',
-                            fontSize: 15.0,
-                            color: lightGrey,
                           ),
-                          errorStyle: TextStyle(
-                            color: errorColor,
-                            fontFamily: 'mons',
-                            fontSize: 10.0,
-                          ),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: textColor,width: 0),
+                          SizedBox(height: 10.0,),
 
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: textColor,width: 0),
 
-                          ),
-                          errorBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: errorColor,width: 0),
+                          Visibility(
+                              visible: isDay && !multiday,
+                              child: selectbtnsss(dateString,(){pickDate();},bgColor,mainColor)),
+                          Visibility(
+                              visible: isDay && multiday,
+                              child: Row(
+                                children: [
+                                  Expanded(child: selectbtnsss(startDatestring,(){pickstartDate();},bgColor,mainColor)),
+                                  SizedBox(width: 5.0,),
+                                  Expanded(child: selectbtnsss(endDateString,(){pickendDate();},bgColor,mainColor)),
+                                ],
+                              )),
+                          SizedBox(height: 10.0,),
 
+                          mainText("event time", lightGrey, 10.0, FontWeight.normal, 1),
+                          Row(
+                            children: [
+                              Expanded(child: selectbtnsss(startTimeString, () { startTimePicker();}, bgColor, mainColor)),
+                              SizedBox(width: 5.0,),
+                              Expanded(child: selectbtnsss(endTimeString, () { endTimePicker();}, bgColor, mainColor)),
+                            ],
                           ),
-                        ),
-                        onChanged: (text){
-                          setState(() {
-                            totalSeats = int.parse(text);
-                          });
-                        },
-                        validator: (text){
-                          if(text!.isEmpty){
-                            return("Please Enter Total Seats");
-                          }
-                        },
-                      ),
-                      SizedBox(height: 10.0,),
-                      mainText("Category", lightGrey, 10.0, FontWeight.normal, 1),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: categoryList,
-                        ),
-                      ),
-                      SizedBox(height: 15.0,),
 
-                      fullbtnsss("POST EVENT", () {postNow();}, mainColor, textColor),
-                    ]),
-              )),
+                          SizedBox(height: 10.0,),
+                          mainText("Online or Offline?", lightGrey, 10.0, FontWeight.normal, 1),
+                          Row(
+                            children: [
+                              Expanded(child: selectbtnsss("Online", () {changeType(0);}, typebg[0], typetext[0])),
+                              SizedBox(width: 5.0,),
+                              Expanded(child: selectbtnsss("Offline", () {changeType(1);}, typebg[1], typetext[1])),
+                            ],
+                          ),
+
+
+
+                          SizedBox(height: 10.0,),
+
+                          Visibility(
+                            visible: isType && online,
+                            child: TextFormField(
+                              minLines: 1,
+                              maxLines: 5,
+                              maxLength: 200,
+                              style: TextStyle(
+                                  color: lightGrey,
+                                  fontSize: 15.0,
+                                  fontFamily: 'mons'),
+                              decoration: InputDecoration(
+                                counterText: "",
+                                hintText: "link",
+                                hintStyle: TextStyle(
+                                  fontFamily: 'mons',
+                                  fontSize: 15.0,
+                                  color: lightGrey,
+                                ),
+                                errorStyle: TextStyle(
+                                  color: errorColor,
+                                  fontFamily: 'mons',
+                                  fontSize: 10.0,
+                                ),
+                                enabledBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(color: textColor,width: 0),
+
+                                ),
+                                focusedBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(color: textColor,width: 0),
+
+                                ),
+                                errorBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(color: errorColor,width: 0),
+
+                                ),
+                              ),
+                              onChanged: (text){
+                                setState(() {
+                                  link = text;
+                                });
+                              },
+                              validator: (text){
+                                if(text!.isEmpty){
+                                  return("Please Enter a Link");
+                                }
+                              },
+                            ),
+                          ),
+
+                          Visibility(
+                              visible: isType && !online,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  mainText("Where?", lightGrey, 10.0, FontWeight.normal, 1),
+                                  selectbtnsss(place, () { ShowStateCityPicker(context);}, bgColor, mainColor),
+                                  SizedBox(height: 5.0,),
+                                  TextFormField(
+                                    minLines: 1,
+                                    maxLines: 2,
+                                    maxLength: 200,
+                                    style: TextStyle(
+                                        color: lightGrey,
+                                        fontSize: 13.0,
+                                        fontFamily: 'mons'),
+                                    decoration: InputDecoration(
+                                      counterText: "",
+                                      hintText: "Where event is talking place?",
+                                      hintStyle: TextStyle(
+                                        fontFamily: 'mons',
+                                        fontSize: 13.0,
+                                        color: lightGrey,
+                                      ),
+                                      errorStyle: TextStyle(
+                                        color: errorColor,
+                                        fontFamily: 'mons',
+                                        fontSize: 10.0,
+                                      ),
+                                      enabledBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(color: textColor,width: 0),
+
+                                      ),
+                                      focusedBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(color: textColor,width: 0),
+
+                                      ),
+                                      errorBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(color: errorColor,width: 0),
+
+                                      ),
+                                    ),
+                                    onChanged: (text){
+                                      setState(() {
+                                        venu = text;
+                                      });
+                                    },
+                                    validator: (text){
+                                      if(text!.isEmpty){
+                                        return("Please Enter a Venu");
+                                      }
+                                    },
+                                  ),
+
+                                ],
+                              )),
+
+                          SizedBox(height: 10.0,),
+                          TextFormField(
+                            maxLength: 3,
+                            keyboardType: TextInputType.number,
+                            style: TextStyle(
+                                color: lightGrey,
+                                fontSize: 15.0,
+                                fontFamily: 'mons'),
+                            decoration: InputDecoration(
+                              counterText: "",
+                              hintText: "Capacity",
+                              hintStyle: TextStyle(
+                                fontFamily: 'mons',
+                                fontSize: 15.0,
+                                color: lightGrey,
+                              ),
+                              errorStyle: TextStyle(
+                                color: errorColor,
+                                fontFamily: 'mons',
+                                fontSize: 10.0,
+                              ),
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: textColor,width: 0),
+
+                              ),
+                              focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: textColor,width: 0),
+
+                              ),
+                              errorBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: errorColor,width: 0),
+
+                              ),
+                            ),
+                            onChanged: (text){
+                              setState(() {
+                                totalSeats = int.parse(text);
+                              });
+                            },
+                            validator: (text){
+                              if(text!.isEmpty){
+                                return("Please Enter Total Seats");
+                              }
+                            },
+                          ),
+                          SizedBox(height: 10.0,),
+                          mainText("Category", lightGrey, 10.0, FontWeight.normal, 1),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: categoryList,
+                            ),
+                          ),
+                          SizedBox(height: 15.0,),
+
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              mainText("Approval Required", lightGrey, 15.0, FontWeight.normal, 1),
+                              SizedBox(width: 5.0,),
+                              Expanded(child:
+                              selectbtnsss("Yes", () { changeApproval(0);}, approvebg[0], approvetext[0])),
+                              SizedBox(width: 3.0,),
+                              Expanded(child: selectbtnsss("No", () { changeApproval(1);}, approvebg[1], approvetext[1])),
+                            ],
+                          ),
+
+                          SizedBox(height: 15.0,),
+                          Container(
+                              height: 70.0,
+                              child: fullbtnsss("POST EVENT", () {postNow();}, mainColor, textColor)),
+                        ]),
+                  )),
+            ),
+            loaderss(isHide, context)
+          ],
         ),
-        loaderss(isHide, context)
+      ),
+        Center(
+          child: Visibility(
+              visible: !canpost && !isHide,
+              child: sorry("You Dont have the Permission to Post an Event",TextButton(onPressed: (){
+                toaster("hello");
+              }, child: mainText("Contact Support", textColor, 15.0, FontWeight.normal, 1)))),
+        )
       ],
     );
   }
@@ -573,6 +702,9 @@ class _PostScreenState extends State<PostScreen> {
       }
       else if(!isCategory){
         snacker("Please Select Event Category", mCtx);
+      }
+      else if(!isApproved){
+        snacker("Please Select Approval Type", mCtx);
       }
       else{
         UploadPhoto(bannerFile.path);
@@ -614,6 +746,24 @@ class _PostScreenState extends State<PostScreen> {
 
   postFinalData(String imgUrl){
 
+    if(online){
+      place = "online";
+    }
+
+    late var m;
+    if(multiday){
+      m = {
+        'id':'id',
+        'approve':false,
+        'attend':{
+          'id':'id',
+        }
+      };
+    }
+    else{
+      m = "id&a&a&a&a";
+    }
+
     print("batman");
     FirebaseAuth auth = FirebaseAuth.instance;
 
@@ -621,13 +771,22 @@ class _PostScreenState extends State<PostScreen> {
     Map<String, dynamic> Item = {
       'title':title,
       'desc':desc,
+      'id':key,
       'multiday':multiday,
       'date':date.toString(),
       'startDate':startDate.toString(),
       'endDate':endDate.toString(),
-      'sartTime':startTime.toString(),
-      'endTime':endTime.toString(),
+      'sartTime':startTimeString,
+      'endTime':endTimeString,
       'online':online,
+      'link':link,
+      'approve':approval,
+      'enrolled':{
+        'id':m,
+      },
+      'attend':{
+        'id':'id'
+      },
       'city': place,
       'venu':venu,
       'capacity':totalSeats,
@@ -659,6 +818,22 @@ class _PostScreenState extends State<PostScreen> {
     });
   }
 
+  changeApproval(int a){
+    setState(() {
+      approvebg = [bgColor,bgColor];
+      approvetext = [mainColor,mainColor];
+      approvebg[a] = mainColor;
+      approvetext[a] = textColor;
+      isApproved = true;
+    });
+    if(a == 0){
+      approval = true;
+    }
+    else{
+      approval = false;
+    }
+  }
+
   puttoUser(String id) async{
     Map<String,dynamic> item = {
       id:id
@@ -674,7 +849,7 @@ class _PostScreenState extends State<PostScreen> {
   }
 
   puttoCity(String id){
-    if(!online) {
+
       Map<String, dynamic> item = {
         id: id
       };
@@ -687,13 +862,7 @@ class _PostScreenState extends State<PostScreen> {
           checker(context);
         })
       });
-    }
-    else{
-      setState(() {
-        toaster("Event Posted Successfully");
-        checker(context);
-      });
-    }
+
   }
 
 
@@ -869,7 +1038,7 @@ class _PostScreenState extends State<PostScreen> {
       var a = ListTile(
         title: Row(
           children: [
-            mainText(i, textDark, 15.0, FontWeight.normal, 1),
+            mainText(i, textColor, 15.0, FontWeight.normal, 1),
             Spacer(),
           ],
         ),
@@ -890,6 +1059,7 @@ class _PostScreenState extends State<PostScreen> {
           return
             StatefulBuilder(builder: (BuildContext context,StateSetter setState){
               return Container(
+                color: bgColor,
                 // height: 200.0,
                 padding: EdgeInsets.symmetric(horizontal: 10.0,vertical: 10.0),
                 child: Column(
@@ -959,7 +1129,7 @@ class _PostScreenState extends State<PostScreen> {
                             var a = ListTile(
                               title: Row(
                                 children: [
-                                  mainText(i, textDark, 15.0, FontWeight.normal, 1),
+                                  mainText(i, textColor, 15.0, FontWeight.normal, 1),
                                   Spacer(),
                                 ],
                               ),
@@ -1002,7 +1172,7 @@ class _PostScreenState extends State<PostScreen> {
           leading: Icon(Iconsax.building,color: mainColor,),
           title: Row(
             children: [
-              mainText(x['city'], textDark, 15.0, FontWeight.normal, 1),
+              mainText(x['city'], textColor, 15.0, FontWeight.normal, 1),
             ],
           ),
           onTap: (){
@@ -1029,6 +1199,7 @@ class _PostScreenState extends State<PostScreen> {
           return
             StatefulBuilder(builder: (BuildContext context,StateSetter setState){
               return Container(
+                color: bgColor,
                 // height: 200.0,
                 padding: EdgeInsets.symmetric(horizontal: 10.0,vertical: 10.0),
                 child: Column(
@@ -1098,7 +1269,7 @@ class _PostScreenState extends State<PostScreen> {
                             var a = ListTile(
                               title: Row(
                                 children: [
-                                  mainText(i, textDark, 15.0, FontWeight.normal, 1),
+                                  mainText(i, textColor, 15.0, FontWeight.normal, 1),
                                   Spacer(),
                                 ],
                               ),

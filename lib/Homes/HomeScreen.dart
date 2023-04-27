@@ -1,5 +1,10 @@
+import 'package:event_app/AlooDart.dart';
 import 'package:event_app/NavDrawer/NavDrawer.dart';
+import 'package:event_app/QR/UserQR.dart';
+import 'package:event_app/Usefull/Functions.dart';
+import 'package:event_app/screens/MyFeeds.dart';
 import 'package:event_app/screens/Profile.dart';
+import 'package:event_app/screens/allEvents.dart';
 import 'package:event_app/screens/home.dart';
 import 'package:event_app/screens/post.dart';
 import 'package:flutter/material.dart';
@@ -8,31 +13,39 @@ import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../Usefull/Colors.dart';
 import 'package:custom_navigation_bar/custom_navigation_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 
 final GlobalKey<ScaffoldState> _key = GlobalKey();
+
+late _homeScreenState stateofHomeScreen;
 
 class homeScreen extends StatefulWidget {
   Map data;
   homeScreen({Key? key, required this.data}) : super(key: key);
 
   @override
-  State<homeScreen> createState() => _homeScreenState();
+  State<homeScreen> createState() {
+    stateofHomeScreen = _homeScreenState();
+    return stateofHomeScreen;
+  }
 }
 
 class _homeScreenState extends State<homeScreen> {
   bool isHide = false;
   int _index = 0;
   List bottomItems = [];
+  FirebaseAuth auth = FirebaseAuth.instance;
 
   @override
   void initState() {
     // testApi();
     setState(() {
       bottomItems = [
-   Home(),
-        Column(),
-        PostScreen(),
+        Home(data: widget.data,),
+        allEvents(data: widget.data),
+        myFeeds(data: widget.data),
         userProfile(data: widget.data)
        // profile(),
       ];
@@ -48,6 +61,7 @@ class _homeScreenState extends State<homeScreen> {
       appBar: AppBar(
         backgroundColor: transparent_overlay,
         elevation: 0.0,
+
         leading: Row(
           children: [
             SizedBox(),
@@ -62,13 +76,20 @@ class _homeScreenState extends State<homeScreen> {
         title: Row(
           children: [
             // Icon(Iconsax.car),
-            SizedBox(
-              width: 3.0,
-            ),
+            // Spacer(),
+            mainText("ibento", textColor, 15.0, FontWeight.bold, 1),
+            Spacer(),
+
           ],
         ),
         actions: [
-          IconButton(onPressed: () {}, icon: Icon(Iconsax.notification))
+          IconButton(onPressed: () {
+            navScreen( PostScreen(), context, false);
+          }, icon: Icon(Iconsax.add_circle)),
+
+          IconButton(onPressed: () {
+            navScreen(userQR(text: "Attendance QR", qrs: "${widget.data['uid']}&${widget.data['name']}&${widget.data['index']}", data: widget.data), context, false);
+          }, icon: Icon(Iconsax.scan_barcode))
         ],
       ),
       bottomNavigationBar: Padding(
@@ -100,13 +121,13 @@ class _homeScreenState extends State<homeScreen> {
                 //     mainText("Home", Colors.white, 10.0, FontWeight.normal, 1)),
             CustomNavigationBarItem(
                 icon: Icon(
-                  Iconsax.box,
+                  Iconsax.dcube,
                 ),),
                 // title: mainText(
                 //     "Children", Colors.white, 10.0, FontWeight.normal, 1)),
             CustomNavigationBarItem(
                 icon: Icon(
-                  Iconsax.add_circle,
+                  Iconsax.ghost,
                 ),),
                 // title:
                 //     mainText("Post", Colors.white, 10.0, FontWeight.normal, 1)),
@@ -119,7 +140,9 @@ class _homeScreenState extends State<homeScreen> {
           ],
         ),
       ),
-      body: bottomItems.elementAt(_index),
+      body: Stack(children: [
+        circles(context),
+        bottomItems.elementAt(_index)]),
     );
   }
 }

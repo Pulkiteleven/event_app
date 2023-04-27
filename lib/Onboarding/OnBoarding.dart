@@ -3,6 +3,7 @@ import 'package:event_app/Backend/backend.dart';
 import 'package:event_app/Data/CityandStates.dart';
 import 'package:event_app/Usefull/Buttons.dart';
 import 'package:event_app/Usefull/Colors.dart';
+import 'package:event_app/Usefull/Functions.dart';
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:iconsax/iconsax.dart';
@@ -29,18 +30,19 @@ class _onBoardingState extends State<onBoarding> {
 
   List<PageViewModel> onboardingPages = [];
   List interstList = [];
-  int index = 0;
+  String index = "";
   String place = "";
   late BuildContext mCtx;
   bool isHide = false;
 
   final _messangerKey = GlobalKey<ScaffoldMessengerState>();
 
-
+  FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void initState() {
     setState((){
+      index = _auth.currentUser!.uid;
       populateScreen();
     });
   }
@@ -77,7 +79,7 @@ class _onBoardingState extends State<onBoarding> {
       PageViewModel(
           titleWidget: mainText("Select Your Avatar", textColor, 35.0, FontWeight.bold, 1),
           bodyWidget: allAvatars(),
-          image: circleImg(),
+          image: circleImg(id:_auth.currentUser!.uid),
           decoration: PageDecoration(
               imageFlex: 3,
               bodyFlex: 2,
@@ -609,17 +611,18 @@ class _allAvatarsState extends State<allAvatars> {
 
   @override
   void initState() {
-    for(int i = 0;i<10;i++){
+    for(int i = 0;i<20;i++){
+      String str = generateRandomString(8);
       var a = GestureDetector(
         onTap: (){
           stateofcircleImg.setState(() {
-            stateofcircleImg.index = i;
+            stateofcircleImg.widget.id = str;
           });
           stateofOnboarding.setState(() {
-            stateofOnboarding.index = i;
+            stateofOnboarding.index = str;
           });
         },
-        child: Avatar(i, 40.0),
+        child: Avatar(str, 40.0),
       );
       var s = SizedBox(width: 5.0,);
       setState(() {
@@ -643,7 +646,8 @@ class _allAvatarsState extends State<allAvatars> {
 late _circleImgState stateofcircleImg;
 
 class circleImg extends StatefulWidget {
-  const circleImg({Key? key}) : super(key: key);
+  String id;
+  circleImg({Key? key,required this.id}) : super(key: key);
 
   @override
   State<circleImg> createState() {
@@ -653,10 +657,9 @@ class circleImg extends StatefulWidget {
 }
 
 class _circleImgState extends State<circleImg> {
-  int index = 0;
   @override
   Widget build(BuildContext context) {
-    return Avatar(index, 70.0);
+    return Avatar(widget.id, 70.0);
   }
 }
 

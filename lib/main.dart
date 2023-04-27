@@ -8,8 +8,8 @@ import 'package:event_app/Usefull/Colors.dart';
 import 'package:event_app/Usefull/Functions.dart';
 import 'package:event_app/screens/home.dart';
 import 'package:event_app/screens/post.dart';
-import 'package:event_app/screens/sign_in.dart';
-import 'package:event_app/screens/sign_up.dart';
+import 'package:event_app/Auth/sign_in.dart';
+import 'package:event_app/Auth/sign_up.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -23,6 +23,7 @@ void main() async {
 
     // home:logIn(),
     home: Splash()
+    // home: signUp()
     // home: signUp()
 
 
@@ -46,6 +47,7 @@ class _SplashState extends State<Splash> {
     Future.delayed(Duration(seconds: 3), () {
       check();
     });
+
   }
 
   check() async {
@@ -63,19 +65,24 @@ class _SplashState extends State<Splash> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         backgroundColor: mainColor,
-        body: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
+        body: Stack(
           children: [
-            Row(
+            coolcircles(context),
+            Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Spacer(),
-                mainText("Avent", bgColor, 30.0, FontWeight.bold, 1),
-                Spacer(),
+                Row(
+                  children: [
+                    Spacer(),
+                    mainText("ibento", textColor, 40.0, FontWeight.bold, 1),
+                    Spacer(),
+                  ],
+                ),
+                mainText("ASPER", bgLight, 10.0, FontWeight.normal, 1),
               ],
             ),
-            mainText("ASPER", bgLight, 10.0, FontWeight.normal, 1),
           ],
         ),
       ),

@@ -7,7 +7,7 @@ import 'package:event_app/NavDrawer/nav_screen/invite.dart';
 import 'package:event_app/NavDrawer/nav_screen/privacy_policy.dart';
 import 'package:event_app/NavDrawer/nav_screen/settings.dart';
 import 'package:event_app/Usefull/Colors.dart';
-import 'package:event_app/screens/sign_in.dart';
+import 'package:event_app/Auth/sign_in.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -106,19 +106,19 @@ class _navigationDrawerState extends State<navigationDrawer> {
             const SizedBox(height: 10.0,),
 
 
-            ListTile(
-              leading: const Icon(Iconsax.setting),
-              iconColor: mainColor,
-              visualDensity: const VisualDensity(vertical: -3),
-              focusColor: lightGrey,
-              selectedTileColor: lightGrey,
-              selectedColor: lightGrey,
-              title:
-              mainTextLeft("Settings", mainColor, 13.0, FontWeight.normal, 1),
-              onTap: () {
-                navScreen(setting(), context, false);
-              },
-            ),
+            // ListTile(
+            //   leading: const Icon(Iconsax.setting),
+            //   iconColor: mainColor,
+            //   visualDensity: const VisualDensity(vertical: -3),
+            //   focusColor: lightGrey,
+            //   selectedTileColor: lightGrey,
+            //   selectedColor: lightGrey,
+            //   title:
+            //   mainTextLeft("Settings", mainColor, 13.0, FontWeight.normal, 1),
+            //   onTap: () {
+            //     navScreen(setting(), context, false);
+            //   },
+            // ),
 
             ListTile(
               leading: const Icon(Iconsax.share),
@@ -130,7 +130,7 @@ class _navigationDrawerState extends State<navigationDrawer> {
               title:
               mainTextLeft("Invite", mainColor, 13.0, FontWeight.normal, 1),
               onTap: () {
-                navScreen(Invite(), context, false);
+                // navScreen(Invite(), context, false);
               },
             ),
 
@@ -199,35 +199,8 @@ class _navigationDrawerState extends State<navigationDrawer> {
               selectedColor: lightGrey,
               title:
               mainTextLeft("Logout", mainColor, 13.0, FontWeight.normal, 1),
-              onTap: () {
-                bottoms(context,
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-
-                      children: [
-                        mainText(" You wanna Logout?", textColor, 20.0, FontWeight.normal,1),
-                        const SizedBox(height: 5.0,),
-                        Row(
-                          children: [
-                            TextButton(onPressed: (){
-                              FirebaseAuth.instance.signOut().then((value) {
-                                Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (c) =>
-                                    logIn()),
-                                        (Route<dynamic> route) => false);
-                              });
-                            },
-                              child: mainText("Logout", mainColor, 15.0, FontWeight.normal, 1),),
-                            TextButton(onPressed: (){
-                              Navigator.pop(context);
-                            },
-                              child: mainText("Cancel", lightGrey, 15.0, FontWeight.normal, 1),)
-                          ],
-                        )
-
-                      ],
-                    )
-                );
+              onTap: (){
+                ConfirmLogout();
               },
             ),
 
@@ -238,6 +211,48 @@ class _navigationDrawerState extends State<navigationDrawer> {
       ],
     );
   }
+
+  ConfirmLogout() async {
+    return (await showDialog(
+      context: context,
+      builder: (context) => new AlertDialog(
+        titleTextStyle:
+        TextStyle(fontFamily: 'mons', fontSize: 15.0, color: textColor),
+        contentTextStyle:
+        TextStyle(fontFamily: 'mons', fontSize: 13.0, color: Colors.grey),
+        alignment: Alignment.center,
+        backgroundColor: bgColor,
+        shape:
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+        title: new Text('Logout'),
+        content: new Text('Confirm Logout'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(false);
+              FirebaseAuth.instance.signOut().then((value) {
+                Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (c) =>
+                    logIn()),
+                        (Route<dynamic> route) => false);
+              });
+              },
+            child: new Text(
+              'Logout',
+              style: TextStyle(color: mainColor, fontFamily: 'mons'),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: new Text(
+              'Cancel',
+              style: TextStyle(color: mainColor, fontFamily: 'mons'),
+            ),
+          ),
+        ],
+      ),
+    )) ?? false;
+  }
+
 
 }
 

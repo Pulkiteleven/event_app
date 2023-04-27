@@ -1,6 +1,6 @@
 import 'package:event_app/Backend/backend.dart';
 import 'package:event_app/Usefull/Buttons.dart';
-import 'package:event_app/screens/sign_up.dart';
+import 'package:event_app/Auth/sign_up.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:iconsax/iconsax.dart';

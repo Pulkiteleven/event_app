@@ -1,6 +1,9 @@
 
 
+import 'package:event_app/Usefull/Colors.dart';
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
+
 
 class PrivacyPolicy extends StatefulWidget {
   const PrivacyPolicy({Key? key}) : super(key: key);
@@ -40,127 +43,46 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
 
 
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
         elevation:0,
         backgroundColor:Colors.transparent,
+        leading: IconButton(
+          onPressed: (){
+            Navigator.pop(context);
+          },
+          icon: Icon(Iconsax.arrow_left_2,color: Colors.white,),
+        ),
       ),
         body:SingleChildScrollView(
+          padding: EdgeInsets.all(20.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24, vertical:15),
-                child: RichText(
-                  text: const TextSpan(text: 'Privacy Policy', style: TextStyle(color: Colors.white,fontSize:24, fontWeight:FontWeight.w700,
-                  ),
-                        ),
-                ),
-              ),
-              Divider(color: Colors.white30,),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24, vertical:15),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :StringA, style: TextStyle(color: Colors.grey,fontSize:14))),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24, vertical:16),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :'1. Information Collection and Use' , style: TextStyle(color: Colors.white,fontSize:18, fontWeight: FontWeight.w500))),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24,),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :StringB, style: TextStyle(color: Colors.grey,fontSize:14))),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24, vertical:16),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :'2. Log Data' , style: TextStyle(color: Colors.white,fontSize:18, fontWeight: FontWeight.w500))),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24,),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :StringC, style: TextStyle(color: Colors.grey,fontSize:14))),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24, vertical:16),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :'3. Cookies' , style: TextStyle(color: Colors.white,fontSize:18, fontWeight: FontWeight.w500))),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24,),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :StringD, style: TextStyle(color: Colors.grey,fontSize:14))),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24, vertical:16),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :'4. Service Providers' , style: TextStyle(color: Colors.white,fontSize:18, fontWeight: FontWeight.w500))),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24,),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :StringE, style: TextStyle(color: Colors.grey,fontSize:14))),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24, vertical:16),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :'5. Security' , style: TextStyle(color: Colors.white,fontSize:18, fontWeight: FontWeight.w500))),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24,),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :StringF, style: TextStyle(color: Colors.grey,fontSize:14))),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24, vertical:16),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :'6. Links to Other Sites' , style: TextStyle(color: Colors.white,fontSize:18, fontWeight: FontWeight.w500))),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24,),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :StringG, style: TextStyle(color: Colors.grey,fontSize:14))),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24, vertical:16),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :'7. Children’s Privacy' , style: TextStyle(color: Colors.white,fontSize:18, fontWeight: FontWeight.w500))),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24,),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :StringH, style: TextStyle(color: Colors.grey,fontSize:14))),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24, vertical:16),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :'8. Changes to this Privacy Policy' , style: TextStyle(color: Colors.white,fontSize:18, fontWeight: FontWeight.w500))),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal:24,),
-                child: RichText(
-                    textAlign: TextAlign.start,
-                    text:TextSpan(text :StringI, style: TextStyle(color: Colors.grey,fontSize:14))),
-              ),
-            ],
+            children:[
+              mainTextFAQS("Privacy Policy", textColor, 20.0, FontWeight.bold, 10),
+              SizedBox(height: 20.0,),
+              mainTextFAQS(StringA, textColor, 15.0, FontWeight.normal, 30),
+              SizedBox(height: 10.0,),
+              mainTextFAQS(StringB, textColor, 15.0, FontWeight.normal, 30),
+              SizedBox(height: 10.0,),
+              mainTextFAQS(StringC, textColor, 15.0, FontWeight.normal, 30),
+              SizedBox(height: 10.0,),
+
+              mainTextFAQS(StringD, textColor, 15.0, FontWeight.normal, 30),
+              SizedBox(height: 10.0,),
+              mainTextFAQS(StringE, textColor, 15.0, FontWeight.normal, 30),
+              SizedBox(height: 10.0,),
+              mainTextFAQS(StringF, textColor, 15.0, FontWeight.normal, 30),
+              SizedBox(height: 10.0,),
+              mainTextFAQS(StringG, textColor, 15.0, FontWeight.normal, 30),
+             SizedBox(height: 10.0,),
+              mainTextFAQS(StringH, textColor, 15.0, FontWeight.normal, 30),
+            SizedBox(height: 10.0,),
+               mainTextFAQS(StringI, textColor, 15.0, FontWeight.normal, 30),
+                              SizedBox(height: 10.0,),
+
+          ]
           ),
         ),
 

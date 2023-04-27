@@ -1,14 +1,10 @@
-import 'dart:convert';
-import 'dart:io';
-import 'dart:math';
-import 'package:event_app/Backend/backend.dart';
+
 import 'package:event_app/Data/CityandStates.dart';
-import 'package:event_app/Event/UserOneEvent.dart';
-import 'package:event_app/Onboarding/OnBoarding.dart';
+import 'package:event_app/Event/OneEvent.dart';
+import 'package:event_app/Usefull/Buttons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../Usefull/Colors.dart';
-import '../Usefull/Buttons.dart';
 
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -36,82 +32,140 @@ import '../Usefull/Functions.dart';
 
 
 
-class userProfile extends StatefulWidget {
+
+late _myFeedsState stateofFeeds;
+
+class myFeeds extends StatefulWidget {
   Map data;
-  userProfile({Key? key,required this.data}) : super(key: key);
+  myFeeds({Key? key,required this.data}) : super(key: key);
 
   @override
-  State<userProfile> createState() => _userProfileState();
+  State<myFeeds> createState() {
+    stateofFeeds = _myFeedsState();
+    return stateofFeeds;
+  }
 }
 
 final databaseRef = FirebaseDatabase.instance.reference();
 
-class _userProfileState extends State<userProfile> {
+class _myFeedsState extends State<myFeeds> {
   bool isHide = false;
-  final _messangerKey = GlobalKey<ScaffoldMessengerState>();
-  List<Widget> allInterests = [];
   bool nf = false;
   String nfmsg = "Nothing Found";
 
-  List userIntersts = [];
+  final _messangerKey = GlobalKey<ScaffoldMessengerState>();
   List allEventIds = [];
   List<eventItem> allEvents = [];
   List<eventItem> finalallEvents = [];
 
 
+  List<filterbtnss> filterList = [];
+  bool isFilter = false;
+  String city = "";
+  String state = "";
+  String place = "Select City";
+  bool isCity = false;
+
+  List<Widget> stateList = [];
+  List<Widget> cityList = [];
+  List citiesList = [];
+
+  FirebaseAuth _auth = FirebaseAuth.instance;
+
   @override
   void initState() {
     super.initState();
-    getEventbyUser();
-    for(var i in widget.data['cat']){
-      var a = btnsss(i, () { }, mainColor, Colors.white);
-      var s = SizedBox(width: 5.0,);
+    getFollowing();
+  }
 
-      setState(() {
-        allInterests.add(a);
-        allInterests.add(s);
-      });
+
+
+  getFollowing() async{
+    if(widget.data['follow'] != null) {
+      List followers = widget.data['follow'];
+      for(var i in followers){
+        String id = i.toString().split("&")[0];
+        String name = i.toString().split("&")[1];
+        String img = i.toString().split("&")[2];
+        getEventbyUser(id);
+        var a = filterbtnss(title: name, id: id, index: img);
+        setState(() {
+          filterList.add(a);
+        });
+        if(filterList.length == 0){
+          setState(() {
+            nf = true;
+          });
+        }
+      }
+      if(filterList.length == 0){
+        setState(() {
+          nf = true;
+        });
+      }
+
     }
   }
 
-  getEventbyUser() async {
-    String userid = widget.data['uid'];
+  getEventbyUser(String id) async {
     setState(() {
       isHide = true;
     });
 
-      var ref = await FirebaseDatabase.instance.reference().child('userEvent');
-      final index = await ref.child(userid).once();
-      if (index.snapshot.value != null) {
-        final data = index.snapshot.value as Map<dynamic, dynamic>;
-        List a = data.keys.toList();
-        for (var i in a) {
-          getEventswithId(i);
-          allEventIds.add(i);
-        }
+    var ref = await FirebaseDatabase.instance.reference().child('userEvent');
+    final index = await ref.child(id).once();
+    if (index.snapshot.value != null) {
+      final data = index.snapshot.value as Map<dynamic, dynamic>;
+      List a = data.keys.toList();
+      for (var i in a) {
+        getEventswithId(i);
+        allEventIds.add(i);
       }
-      else {
-        if(allEventIds.length == 0) {
-          setState(() {
-            isHide = false;
-            nf = true;
-            nfmsg = "No Event in Your City";
-          });
-        }
+    }
+    else {
+      if(allEventIds.length == 0) {
+        setState(() {
+          isHide = false;
+          nf = true;
+          nfmsg = "No Event Found";
+        });
       }
+    }
   }
 
   getEventswithId(String id) async {
+    DateTime currentTime = DateTime.now();
+    DateTime DateToday = DateTime.parse(
+        "${currentTime.year}-${currentTime.month < 10 ? '0${currentTime.month}' : currentTime.month}-${currentTime.day < 10 ? '0${currentTime.day}' : currentTime.day} 00:00:00");
+
     var ref = await FirebaseDatabase.instance.reference().child('event');
     final index = await ref.child(id).once();
     if (index.snapshot.value != null) {
       final data = index.snapshot.value as Map<dynamic,dynamic>;
+      DateTime eventDateFinal = DateTime.now();
+      if(data['multiday']){
+        DateTime d = DateTime.parse(data['endDate']);
+        eventDateFinal = DateTime.parse(
+            "${d.year}-${d.month < 10 ? '0${d.month}' : d.month}-${d.day < 10 ? '0${d.day}' : d.day} 00:00:00");
+
+      }
+      else{
+        DateTime d = DateTime.parse(data['date']);
+        eventDateFinal = DateTime.parse(
+            "${d.year}-${d.month < 10 ? '0${d.month}' : d.month}-${d.day < 10 ? '0${d.day}' : d.day} 00:00:00");
+
+      }
       print(data);
-      var a = eventItem(data: data);
+      var a = eventItem(data: data,userData: widget.data,);
       setState(() {
+        nf = true;
         isHide = false;
-        finalallEvents.add(a);
-        allEvents.add(a);
+        if(DateToday.isBefore(eventDateFinal) || eventDateFinal.isAtSameMomentAs(DateToday)) {
+          if(data['from'] != _auth.currentUser!.uid) {
+            finalallEvents.add(a);
+            allEvents.add(a);
+          }
+        }
       });
     }
     else{
@@ -126,10 +180,39 @@ class _userProfileState extends State<userProfile> {
 
   }
 
+  applyfiler(bool on, String id){
+    setState(() {
+      allEvents = [];
+    });
+    if(on){
+        for(var i in finalallEvents){
+          if(i.data['from'] == id){
+            setState(() {
+              if(!allEvents.contains(i)) {
+                allEvents.add(i);
+              }
+            });
+          }
+        }
+        changeAll(true);
+    }
+    else{
+      setState(() {
+        allEvents = finalallEvents;
+      });
+      changeAll(false);
 
+    }
+  }
 
-
-
+  changeAll(bool a) async{
+    for(var i in filterList){
+      i.stateoffilter.setState(() {
+        i.stateoffilter.blur = a;
+        i.stateoffilter.selected = a;
+      });
+    }
+  }
 
 
 
@@ -138,84 +221,64 @@ class _userProfileState extends State<userProfile> {
 
   @override
   Widget build(BuildContext context) {
-
     mCtx = context;
-
     return Stack(
       children: [
         SingleChildScrollView(
-          child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children:[
-                  Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
 
-                  children: [
-                    Avatar(widget.data['index'], 40.0),
-                    SizedBox(width: 10.0,),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          mainTextFAQS(widget.data['name'], textColor, 20.0, FontWeight.bold, 1),
-                          mainTextFAQS(widget.data['city'], lightGrey, 10.0, FontWeight.normal, 1),
-                        ],
-                      ),
-                    ),
-
-                  ],
-                ),
-                  SizedBox(height: 20.0,),
-                  Row(
-                    children: [
-                      Icon(Iconsax.message,color: mainColor,),
-                      SizedBox(width: 10.0,),
-                      mainTextFAQS(widget.data['email'], mainColor, 15.0, FontWeight.normal, 1),
-                    ],
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0,vertical: 0),
+                width: MediaQuery.of(context).size.width,
+                child: Card(
+                  elevation: 0.0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15.0),
                   ),
-
-                  SizedBox(height: 20.0,),
-                  selectbtnsss("Edit Profile", () {
-                    navScreen(onBoarding(), context, false);
-                  }, mainColor, Colors.white),
-
-
-                  SizedBox(height: 20.0,),
-                  mainTextFAQS("My Interests", textColor, 15.0, FontWeight.normal, 1),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: allInterests,
-                    ),
-                  ),
-                  SizedBox(height: 20.0,),
-                  Column(
+                  color: bgLight,
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      mainText("My Events", mainColor, 10.0, FontWeight.normal, 1),
-                      Visibility(
-                          visible: isHide,
-                          child: loader()),
-                      notFound(nf,"You Have No Events", context),
-                      SizedBox(height: 10.0,),
-                      Column(
-                        children: allEvents,
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: filterList,
+                            )),
                       ),
                     ],
                   ),
-                ]
-              )),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children:allEvents,
+                ),
+              ),
+            ],
+          ),
         ),
-        // loaderss(isHide, context)
+        loaderss(isHide, context),
+        notFound(allEvents.isEmpty && nf,nfmsg, context),
+
       ],
     );
   }
+
+
+
 }
+
 
 class eventItem extends StatefulWidget {
   Map data;
-  eventItem({Key? key,required this.data}) : super(key: key);
+  Map userData;
+  eventItem({Key? key,required this.data,required this.userData}) : super(key: key);
 
   @override
   State<eventItem> createState() => _eventItemState();
@@ -252,7 +315,7 @@ class _eventItemState extends State<eventItem> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: (){
-        navScreen(userOneEvent(data: widget.data), context, false);
+        navScreen(oneEvent(data: widget.data,userData: widget.userData,), context, false);
       },
       child: Container(
         margin: EdgeInsets.only(bottom: 10.0),
@@ -357,5 +420,68 @@ class _eventItemState extends State<eventItem> {
     );
   }
 }
+
+
+
+
+
+
+class filterbtnss extends StatefulWidget {
+  String title;
+  String index;
+  String id;
+  filterbtnss({Key? key,required this.title,required this.id,required this.index}) : super(key: key);
+
+  late _filterbtnssState stateoffilter;
+
+  @override
+  State<filterbtnss> createState() {
+    stateoffilter = _filterbtnssState();
+    return stateoffilter;
+  }
+}
+
+class _filterbtnssState extends State<filterbtnss> {
+  bool blur = false;
+  bool selected = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.only(right: 10.0),
+      child: GestureDetector(
+        onTap: (){
+          if(selected){
+            stateofFeeds.applyfiler(false,widget.id);
+          }
+          else{
+            stateofFeeds.applyfiler(true,widget.id);
+            setState(() {
+              blur = false;
+              selected = true;
+            });
+          }
+        },
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                Avatar(widget.index, 30.0),
+                mainText(widget.title, textColor, 10.0, FontWeight.normal, 1),
+              ],
+            ),
+            Visibility(
+                visible: blur,
+                child: CircleAvatar(
+                  radius: 30.0,
+                  backgroundColor: Color(0x83000000),
+                ))
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 
 

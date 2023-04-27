@@ -1,10 +1,12 @@
 import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:event_app/screens/sign_up.dart';
+import 'package:event_app/Auth/sign_up.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/post.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 
 
 navScreen(Widget a,BuildContext context,bool replace){
@@ -45,4 +47,8 @@ String generateRandomString(int len) {
   const _chars =
       'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
   return List.generate(len, (index) => _chars[r.nextInt(_chars.length)]).join();
+}
+
+LaunchIt(String _url) async{
+  await launchUrl(Uri.parse(_url));
 }
